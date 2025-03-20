@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -39,12 +39,12 @@ export default function WordDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
 
-  const checkFavoriteStatus = async () => {
+  const checkFavoriteStatus = useCallback(async () => {
     if (word) {
       const isFav = await isFavorite(word);
       setFavorite(isFav);
     }
-  };
+  }, [word]);
 
   const toggleFavorite = async () => {
     if (word) {
@@ -76,9 +76,11 @@ export default function WordDetailScreen() {
       .then((res) => res.json())
       .then((result) => {
         if (Array.isArray(result)) setData(result[0]);
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((error) => {
+        throw error;
+      })
+      .finally(() => setLoading(false));
   }, [word]);
 
   if (loading) return <ActivityIndicator style={styles.loader} size="large" />;
@@ -86,7 +88,7 @@ export default function WordDetailScreen() {
 
   return (
     <ScrollView>
-      <View style={styles.container}>
+      <View className="flex-1 p-5">
         <Text style={styles.word}>{data.word}</Text>
 
         {/* Botão de Pronúncia */}

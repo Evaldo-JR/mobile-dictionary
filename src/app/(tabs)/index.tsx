@@ -1,44 +1,53 @@
-import { useState } from 'react';
-import { View, TextInput, FlatList, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useMemo, useState } from 'react';
+import { FlatList, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { wordsMock, Word } from '../../lib/mockData';
+
+import { View, Text } from '@/components/Themed';
+import { SearchInput } from '@/components/SearchInput';
+import { wordsMock } from '@/lib/mockData';
+
+import { s } from '@/styles/screens/home.styles';
 
 export default function WordsListScreen() {
-  const [search, setSearch] = useState<string>('');
+  const [search, setSearch] = useState('');
 
-  const filteredWords: Word[] = wordsMock.filter((word) =>
-    word.word.toLowerCase().includes(search.toLowerCase())
-  );
+  /**
+   * Filtra um array de dados com base em um texto de busca,
+   * ignorando acentos e diferenças entre maiúsculas e minúsculas.
+   */
+  const filteredWords = useMemo(() => {
+    // Normaliza o texto de busca: remove acentos e converte para minúsculas
+    const normalizedSearch = search.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+    return wordsMock.filter(({ word }) =>
+      word
+        .toLowerCase() // Converte o título para minúsculas
+        .normalize('NFD') // Normaliza para forma NFD
+        .replace(/[̀-ͯ]/g, '') // Remove diacríticos
+        .includes(normalizedSearch)
+    );
+  }, [search, wordsMock]);
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Search..."
-        value={search}
-        onChangeText={setSearch}
-      />
+    <View style={s.container}>
+      <Text style={s.title}>📖 Mobile Dictionary</Text>
+
+      {/* Input de Pesquisa */}
+      <SearchInput value={search} onChangeText={setSearch} />
+
+      {/* Grid de Palavras */}
       <FlatList
         data={filteredWords}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.word}
+        numColumns={2}
+        style={s.list}
+        columnWrapperStyle={s.columnWrapper}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => router.push(`/dictionary/${item.word}`)}>
-            <Text style={styles.word}>{item.word}</Text>
+          <TouchableOpacity style={s.card} onPress={() => router.push(`/dictionary/${item.word}`)}>
+            <Text style={s.wordText}>{item.word}</Text>
           </TouchableOpacity>
         )}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  searchBar: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 10,
-  },
-  word: { fontSize: 18, padding: 10, borderBottomWidth: 1 },
-});

@@ -1,8 +1,10 @@
+import { useColorScheme } from 'react-native';
 import { Tabs } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { mvs } from 'react-native-size-matters';
 
 import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { fonts } from '@/styles/themes';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -10,16 +12,18 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: true,
+        tabBarStyle: { height: mvs(56) },
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tabIconSelected,
+        tabBarLabelStyle: { fontFamily: fonts.fontFamily.medium, fontSize: fonts.fontSize.xs },
+        headerShown: false,
+        animation: 'shift',
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Word List',
+          title: 'Dictionary',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="view-list" size={size} color={color} />
           ),

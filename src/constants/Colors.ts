@@ -1,19 +1,21 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+import { colors } from '@/styles/themes';
+
+const tintColorLight = colors['cerulean-blue'][700];
+const tintColorDark = colors['comet-gray'][50];
 
 export default {
   light: {
-    text: '#000',
-    background: '#fff',
+    text: colors['comet-gray'][700],
+    background: colors['comet-gray'][50],
     tint: tintColorLight,
-    tabIconDefault: '#ccc',
+    tabIconDefault: colors['comet-gray'][400],
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#fff',
-    background: '#000',
+    text: colors['comet-gray'][50],
+    background: colors['comet-gray'][950],
     tint: tintColorDark,
-    tabIconDefault: '#ccc',
+    tabIconDefault: colors['comet-gray'][400],
     tabIconSelected: tintColorDark,
   },
 };
