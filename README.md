@@ -1,85 +1,141 @@
-# Mobile Challenge 20240202
+# Mobile Dictionary - Desafio Técnico
 
-## Introdução
+Este projeto foi desenvolvido como parte de um desafio técnico para uma vaga de emprego. O objetivo era criar um aplicativo de dicionário móvel utilizando **React Native** com **Expo** e **TypeScript**. O aplicativo permite aos usuários buscar palavras, visualizar definições, ouvir a pronúncia, salvar favoritos e manter um histórico de palavras pesquisadas. Abaixo, detalho as principais decisões e desafios enfrentados durante o desenvolvimento.
 
-Este é um teste para que possamos ver as suas habilidades como Mobile Developer.
+## Tecnologias Utilizadas
 
-Nesse desafio você deverá desenvolver um aplicativo para listar palavras em inglês, utilizando como base a API [Free Dictionary API](https://dictionaryapi.dev/). O projeto a ser desenvolvido por você tem como objetivo exibir termos em inglês e gerenciar as palavras visualizadas, conforme indicado nos casos de uso que estão logo abaixo.
+- **React Native com Expo**: Escolhi o Expo por sua facilidade de configuração e por permitir o desenvolvimento rápido com acesso a APIs nativas.
+- **TypeScript**: Para garantir tipagem estática e melhorar a manutenção do código.
+- **Expo Router**: Sistema de rotas baseado em arquivos, que facilita a navegação entre telas.
+- **Supabase**: Banco de dados remoto utilizado para buscar as palavras e suas definições.
+- **Expo AV e Expo Speech**: Bibliotecas para reprodução de áudio e leitura de texto (Text-to-Speech).
+- **Expo Secure Store**: Para armazenar o histórico de palavras e favoritos de forma segura.
 
-[SPOILER] As instruções de entrega e apresentação do challenge estão no final deste Readme (=
+## Desafios e Decisões
 
-### Antes de começar
- 
-- Considere como deadline da avaliação a partir do início do teste. Caso tenha sido convidado a realizar o teste e não seja possível concluir dentro deste período, avise a pessoa que o convidou para receber instruções sobre o que fazer.
-- Documentar todo o processo de investigação para o desenvolvimento da atividade (README.md no seu repositório); os resultados destas tarefas são tão importantes do que o seu processo de pensamento e decisões à medida que as completa, por isso tente documentar e apresentar os seus hipóteses e decisões na medida do possível.
+### 1. **Estrutura de Navegação e Layout**
 
-### Instruções iniciais obrigatórias
+A navegação foi implementada usando o **Expo Router**, que permite uma configuração de rotas baseada em arquivos. Isso simplificou a organização do código e a navegação entre telas. O layout principal foi estruturado com `SafeAreaView` para garantir que o conteúdo seja exibido corretamente em dispositivos com notches ou áreas seguras.
 
-- Utilize as seguintes tecnologias:
+```tsx
+// src/app/_layout.tsx
+import { Stack } from 'expo-router';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-#### Tecnologias (Mobile):
-- Nativo ou Hibrido (Flutter, Ionic, React Native, etc)
-- Estilização (Material, Semantic, etc). Ou escrever o seu próprio sob medida 👌
-- Gestão de dados (Redux, Context API, IndexedDB, SQLite, etc)
+function RootLayoutNav() {
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'fade' }} />
+      </SafeAreaView>
+    </SafeAreaProvider>
+  );
+}
+```
 
-Atente-se, ao desenvolver a aplicação mobile, para conceitos de usabilidade e adeque a interface com elementos visuais para os usuários do seu sistema.
+### 2. **Busca e Listagem de Palavras**
 
-#### Tecnologias (Back-End):
-- Firebase, Supabase, etc
+A busca de palavras foi implementada com um `FlatList` que carrega os dados de forma paginada a partir do Supabase. Para melhorar a experiência do usuário, adicionei um sistema de **debounce** na barra de busca, que aguarda 300ms após a digitação para realizar a requisição, evitando múltiplas chamadas desnecessárias.
 
-#### Organização:
-- Aplicação de padrões Clean Code
-- Validação de chamadas assíncronas para evitar travamentos
+```tsx
+// src/app/(tabs)/index.tsx
+const debounce = (func: () => void, delay: number) => {
+  let timeout: NodeJS.Timeout;
+  return () => {
+    clearTimeout(timeout);
+    timeout = setTimeout(func, delay);
+  };
+};
 
-### Modelo de Dados:
+const updateSearch = (searchQuery: string) => {
+  setSearch(searchQuery);
+  setPage(1);
+  debouncedUpdateSearch();
+};
+```
 
-Conforme indicado na documentação da API, a API retorna as informações de uma palavra, tais como etimologia, sinônimos, exemplos de uso, etc. Utilize os campos indicados na documentação dos endpoints para obter os dados necessários.
- 
-### Front-End:
+### 3. **Reprodução de Áudio e Text-to-Speech**
 
-Nessa etapa você deverá desenvolver uma aplicação móvel nativa ou hibrida para consumir a API do desafio.
+Para a funcionalidade de áudio, utilizei a biblioteca `expo-av` para reproduzir áudios de pronúncia disponíveis na API. Caso o áudio não estivesse disponível, implementei um fallback usando `expo-speech` para ler a palavra em voz alta.
 
-**Obrigatório 1** - Você deverá atender aos seguintes casos de uso:
+```tsx
+// src/app/dictionary/[word].tsx
+const playPronunciation = useCallback(() => {
+  if (word) {
+    speak(word, {
+      language: 'en',
+      rate: 0.8,
+    });
+  }
+}, [word]);
+```
 
-- Como usuário, devo ser capaz de visualizar uma lista de palavras com rolagem infinita
-- Como usuário, devo ser capaz de visualizar uma palavra, significados e a fonética
-- Como usuário, devo ser capaz de salvar a palavra como favorito
-- Como usuário, devo ser capaz de remover a palavra como favorito
-- Como usuário, devo ser capaz de visitar uma lista com as palavras que já vi anteriormente
+### 4. **Armazenamento Local de Histórico e Favoritos**
 
-A API não possui endpoint com a lista de palavras. Essa lista pode ser carregada em memória ou ser salva em banco de dados local ou remoto (por exemplo, com Firebase). Será necessário usar o [arquivo existente dentro do projeto no Github](https://github.com/dwyl/english-words/blob/master/words_dictionary.json).
+O histórico de palavras pesquisadas e as palavras favoritas são armazenados localmente usando `expo-secure-store`, que oferece uma maneira segura de armazenar dados sensíveis. A cada nova pesquisa, a palavra é adicionada ao histórico, e o usuário pode favoritar palavras para acessá-las posteriormente.
 
-**Obrigatório 2** - Salvar em cache o resultado das requisições, para agilizar a resposta em caso de buscas com parâmetros repetidos.
+```tsx
+// src/app/(tabs)/history.tsx
+const loadHistory = async () => {
+  const storedHistory = await getHistory();
+  setHistory(storedHistory);
+};
+```
 
-**Obrigatório 3** - Seguir o wireframe para a página de listagem dos dados. Pode-se alterar a posição dos itens, mantendo as funcionalidades solicitadas.
+### 5. **Design Responsivo e Temas**
 
-<img src="./img/wireframe.png" width="100%" />
+O aplicativo suporta temas claro e escuro, utilizando o `ThemeProvider` do `@react-navigation/native`. As cores e estilos foram definidos em um arquivo centralizado (`Colors.ts`), facilitando a manutenção e consistência visual.
 
-**Diferencial 1** - Implementar um tocador de audio utilizando, por exemplo, https://responsivevoice.org/api ou recursos nativos;
+```tsx
+// src/app/_layout.tsx
+const colorScheme = useColorScheme();
+<ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+  {/* Conteúdo */}
+</ThemeProvider>;
+```
 
-**Diferencial 2** - Utilizar alguma ferramenta de Injeção de Dependência;
+## Conclusão
 
-**Diferencial 3** - Escrever Unit Tests ou E2E Test. Escolher a melhor abordagem e biblioteca;
+Este projeto foi um desafio interessante que me permitiu explorar diversas tecnologias e conceitos, desde a integração com APIs externas até a implementação de funcionalidades complexas como reprodução de áudio e armazenamento seguro. Acredito que o resultado final atende aos requisitos propostos e demonstra minha capacidade de resolver problemas e entregar soluções eficientes.
 
-**Diferencial 4** - Implementar login com usuário e senha e associar os favoritos e histórico ao ID do usuário, salvando essa informação em banco de dados local ou remoto
-## Readme do Repositório
+Para mais detalhes sobre o código, sinta-se à vontade para explorar o repositório no GitHub: [Mobile Dictionary](https://github.com/Evaldo-JR/mobile-dictionary).
 
-- Deve conter o título do projeto
-- Uma descrição sobre o projeto em frase
-- Deve conter uma lista com linguagem, framework e/ou tecnologias usadas
-- Como instalar e usar o projeto (instruções)
-- Não esqueça o [.gitignore](https://www.toptal.com/developers/gitignore)
-- Se está usando github pessoal, referencie que é um challenge by coodesh:  
+## 🚀 Como Executar o Projeto Localmente
 
->  This is a challenge by [Coodesh](https://coodesh.com/)
+Siga os passos abaixo para instalar e executar o aplicativo em sua máquina:
 
-## Finalização e Instruções para a Apresentação
+### Pré-requisitos
 
-1. Adicione o link do repositório com a sua solução no teste
-2. Adicione o link da apresentação do seu projeto no README.md.
-3. Verifique se o Readme está bom e faça o commit final em seu repositório;
-4. Envie e aguarde as instruções para seguir. Sucesso e boa sorte. =)
+- Node.js instalado (versão 16 ou superior).
+- Expo CLI instalado globalmente (npm install -g expo-cli).
+- Um dispositivo físico ou emulador configurado para rodar aplicativos React Native.
 
-## Suporte
+### Passos para Instalação
 
-Use a [nossa comunidade](https://discord.gg/rdXbEvjsWu) para tirar dúvidas sobre o processo ou envie uma mensagem diretamente a um especialista no chat da plataforma. 
+Clone o repositório:
+
+```bash
+git clone https://github.com/Evaldo-JR/mobile-dictionary.git
+cd mobile-dictionary
+```
+
+### Instale as dependências:
+
+```bash
+npm install
+```
+
+### Configure o ambiente:
+
+Certifique-se de ter o arquivo .env na raiz do projeto com as variáveis de ambiente necessárias (como a URL do Supabase).
+
+Inicie o servidor de desenvolvimento:
+
+```bash
+npx expo start
+```
+
+### Execute o aplicativo:
+
+Escaneie o QR code exibido no terminal com o aplicativo Expo Go (disponível na App Store ou Google Play).
+Ou, se estiver usando um emulador, pressione a (para Android) ou i (para iOS) no terminal para abrir o aplicativo diretamente no emulador.
