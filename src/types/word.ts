@@ -1,3 +1,8 @@
+export interface Word {
+  id: number;
+  word: string;
+}
+
 export interface Phonetic {
   text: string;
   audio?: string;
