@@ -3,17 +3,28 @@
  * https://docs.expo.io/guides/color-schemes/
  */
 
-import { Text as DefaultText, View as DefaultView, useColorScheme } from 'react-native';
+import {
+  Text as DefaultText,
+  View as DefaultView,
+  TouchableOpacity as DefaultTouchableOpacity,
+  TextInput as DefaultTextInput,
+  TextInputProps as DefaultTextInputProps,
+  useColorScheme,
+} from 'react-native';
 
 import Colors from '@/constants/Colors';
+import { forwardRef } from 'react';
 
 type ThemeProps = {
   lightColor?: string;
   darkColor?: string;
 };
 
-export type TextProps = ThemeProps & DefaultText['props'];
-export type ViewProps = ThemeProps & DefaultView['props'];
+export type TextProps = ThemeProps & React.ComponentProps<typeof DefaultText>;
+export type ViewProps = ThemeProps & React.ComponentProps<typeof DefaultView>;
+export type TouchableOpacityProps = ThemeProps &
+  React.ComponentProps<typeof DefaultTouchableOpacity>;
+export type TextInputProps = ThemeProps & DefaultTextInputProps;
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
@@ -42,3 +53,22 @@ export function View(props: ViewProps) {
 
   return <DefaultView style={[{ backgroundColor }, style]} {...otherProps} />;
 }
+
+export function TouchableOpacity(props: TouchableOpacityProps) {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const backgroundColor = useThemeColor({ light: lightColor, dark: darkColor }, 'background');
+
+  return <DefaultTouchableOpacity style={[{ backgroundColor }, style]} {...otherProps} />;
+}
+export const TextInput = forwardRef<DefaultTextInput, TextInputProps>((props, ref) => {
+  const { style, lightColor, darkColor, ...otherProps } = props;
+  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+
+  return (
+    <DefaultTextInput
+      ref={ref} // Encaminha a ref para o TextInput nativo
+      style={[{ color }, style]}
+      {...otherProps}
+    />
+  );
+});

@@ -1,21 +1,37 @@
 import { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity } from 'react-native';
+import { Alert, FlatList } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 
 import { getHistory, clearHistory } from '@/lib/storage/history';
+import { WordCard } from '@/components/WordCard';
+import { View, Text, TouchableOpacity } from '@/components/Themed';
+import { PageLoading } from '@/components/PageLoading';
+
 import { s } from '@/styles/screens/history.styles';
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const handleClearHistory = async () => {
-    await clearHistory();
-    setHistory([]);
+    Alert.alert('Limpar Histórico', 'Tem certeza que deseja limpar o histórico de palavras?', [
+      {
+        text: 'Sim, limpar',
+        onPress: async () => {
+          await clearHistory();
+          setHistory([]);
+        },
+        style: 'destructive',
+      },
+      { text: 'Não' },
+    ]);
   };
 
   const loadHistory = async () => {
+    setLoading(true);
     const storedHistory = await getHistory();
     setHistory(storedHistory);
+    setLoading(false);
   };
 
   // Carregar histórico sempre que a tela for focada
@@ -25,22 +41,28 @@ export default function HistoryScreen() {
     }, [])
   );
 
+  if (loading) {
+    return <PageLoading />;
+  }
+
   return (
     <View style={s.container}>
-      <Text style={s.title}>📜 Search History</Text>
+      <Text style={s.title}>📜 Words History</Text>
 
       {history.length === 0 ? (
-        <Text style={s.emptyText}>No words in history</Text>
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <Text style={s.emptyText}>No words in history</Text>
+        </View>
       ) : (
         <FlatList
           data={history}
           keyExtractor={(item) => item}
           renderItem={({ item }) => (
-            <TouchableOpacity style={s.card} onPress={() => router.push(`/dictionary/${item}`)}>
-              <Text style={s.wordText}>{item}</Text>
-            </TouchableOpacity>
+            <WordCard title={item} onPress={() => router.push(`/dictionary/${item}`)} />
           )}
           style={s.list}
+          contentContainerStyle={s.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
 

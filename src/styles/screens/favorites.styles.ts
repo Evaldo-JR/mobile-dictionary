@@ -1,41 +1,33 @@
 import { StyleSheet } from 'react-native';
-import { shadows } from '@/styles/themes';
+import { mvs } from 'react-native-size-matters';
+
+import { colors, fonts, shadows } from '@/styles/themes';
 
 export const s = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    padding: 16,
+    paddingBottom: mvs(16),
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: fonts.fontFamily.bold,
+    fontSize: fonts.fontSize['xl'],
     textAlign: 'center',
-    marginBottom: 16,
-    color: '#333',
+    marginBottom: mvs(16),
   },
   emptyText: {
-    fontSize: 16,
+    fontFamily: fonts.fontFamily.regular,
+    fontSize: fonts.fontSize['base'],
     textAlign: 'center',
-    color: '#888',
-    marginTop: 20,
+    color: colors['comet-gray'][500],
+    marginTop: mvs(20),
   },
   list: {
-    marginTop: 8,
+    marginTop: mvs(8),
+    paddingHorizontal: mvs(24),
+    marginBottom: mvs(16),
   },
-  card: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-    ...shadows,
-  },
-  wordText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+  listContent: {
+    gap: mvs(12),
+    paddingBottom: mvs(80),
   },
 });

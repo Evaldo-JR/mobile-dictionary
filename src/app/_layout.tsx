@@ -3,20 +3,20 @@ import { useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
+import { mvs } from 'react-native-size-matters';
+import 'react-native-reanimated';
 
 import Colors from '@/constants/Colors';
-import 'react-native-reanimated';
-import { mvs } from 'react-native-size-matters';
+import { setupDatabase } from '@/database/initializeDatabase';
+import { importInitialWords, importRemainingWords } from '@/lib/importData';
+import { DatabaseProvider, useDatabase } from '@/context/DatabaseContext';
 
-export {
-  // Captura qualquer erro lançado pelo componente layout.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
-// Previne a splash screen de ocultar automaticamente antes do carregamento completo dos recursos.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -31,26 +31,48 @@ export default function RootLayout() {
     Inter_Bold: require('../../assets/fonts/Inter_18pt-Bold.ttf'),
   });
 
-  // Expo Router usa Error Boundaries para capturar erros na árvore de navegação.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
 
   if (!loaded) {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <SQLiteProvider databaseName="dictionary.db" onInit={setupDatabase}>
+      <DatabaseProvider>
+        <RootLayoutNav />
+      </DatabaseProvider>
+    </SQLiteProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const db = useSQLiteContext();
+  const { setIsDatabaseReady } = useDatabase();
+
+  useEffect(() => {
+    async function initializeDatabase() {
+      try {
+        await importInitialWords(db); // Importa palavras iniciais
+        setIsDatabaseReady(true); // Marca o banco de dados como pronto para uso
+
+        SplashScreen.hideAsync(); // Oculta a Splash Screen após carregar as palavras iniciais
+
+        await importRemainingWords(db); // Importa o restante das palavras em segundo plano
+
+        setIsDatabaseReady(true); // Marca o banco de dados como totalmente pronto
+      } catch (error) {
+        console.error('❌ Erro ao inicializar o banco de dados:', error);
+      } finally {
+        SplashScreen.hideAsync(); // Garante que a Splash Screen seja ocultada
+      }
+    }
+
+    initializeDatabase();
+  }, [db, setIsDatabaseReady]);
 
   return (
     <SafeAreaProvider>
@@ -63,7 +85,12 @@ function RootLayoutNav() {
           }}
         >
           <StatusBar style="auto" />
-          <Stack screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }} />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'fade',
+            }}
+          />
         </SafeAreaView>
       </ThemeProvider>
     </SafeAreaProvider>

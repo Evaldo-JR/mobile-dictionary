@@ -15,9 +15,8 @@ export const s = StyleSheet.create({
   },
   input: {
     flex: 1,
-    marginLeft: mvs(8),
     fontFamily: fonts.fontFamily.regular,
     fontSize: fonts.fontSize.sm,
-    color: '#333',
+    marginLeft: mvs(8),
   },
 });

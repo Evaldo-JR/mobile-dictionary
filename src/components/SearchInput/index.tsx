@@ -1,31 +1,38 @@
 import { useRef, useState } from 'react';
-import { TextInput, TextInputProps } from 'react-native';
+import { TextInput as DefaultTextInput, TextInputProps } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { mvs } from 'react-native-size-matters';
 
-import { View } from '../Themed';
+import { useThemeColor, View, TextInput } from '@/components/Themed';
 
 import { colors } from '@/styles/themes';
 import { s } from './styles';
 
 export function SearchInput(props: TextInputProps) {
-  const [focusColor, setFocusColor] = useState(colors['comet-gray'][300]);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<DefaultTextInput>(null);
 
-  const inputRef = useRef<TextInput>(null);
+  const iconColor = useThemeColor(
+    {
+      light: isFocused ? colors['cerulean-blue'][600] : colors['comet-gray'][500],
+      dark: isFocused ? colors['cerulean-blue'][400] : colors['comet-gray'][500],
+    },
+    'text'
+  );
 
   const handleFocus = () => {
     inputRef.current?.focus();
-    setFocusColor(colors['comet-gray'][800]);
+    setIsFocused(true);
   };
 
   const handleBlur = () => {
     inputRef.current?.blur();
-    setFocusColor(colors['comet-gray'][300]);
+    setIsFocused(false);
   };
 
   return (
     <View lightColor={colors.white} darkColor={colors.black} style={s.searchContainer}>
-      <FontAwesome name="search" size={mvs(20)} color={focusColor} />
+      <FontAwesome name="search" size={mvs(20)} color={iconColor} />
 
       <TextInput
         {...props}
@@ -33,7 +40,7 @@ export function SearchInput(props: TextInputProps) {
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder="Search a word"
-        placeholderTextColor={focusColor}
+        placeholderTextColor={colors['comet-gray'][500]}
         numberOfLines={1}
         style={s.input}
       />

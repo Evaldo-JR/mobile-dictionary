@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { mvs } from 'react-native-size-matters';
 
-import { fonts, shadows } from '@/styles/themes';
+import { fonts } from '@/styles/themes';
 
 export const s = StyleSheet.create({
   container: {
@@ -17,21 +17,10 @@ export const s = StyleSheet.create({
     paddingHorizontal: mvs(24),
     marginTop: mvs(16),
   },
+  listContent: {
+    gap: mvs(12),
+  },
   columnWrapper: {
-    justifyContent: 'space-between',
-  },
-  card: {
-    width: '48%',
-    backgroundColor: '#FFF',
-    padding: 20,
-    marginBottom: 12,
-    alignItems: 'center',
-    borderRadius: 12,
-    ...shadows,
-  },
-  wordText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    gap: mvs(12),
   },
 });
